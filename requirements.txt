@@ -1,5 +1,6 @@
 numpy
 matplotlib
+ipympl
 cv2
 os
 warnings
