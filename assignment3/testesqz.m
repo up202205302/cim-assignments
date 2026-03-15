@@ -1,0 +1,149 @@
+
+% M.EEC045 - CODIFICACAO DE INFORMACAO MULTIMEDIA
+%
+% first home assignment (audio part)
+%
+% due date: March 29, 2026
+%
+% Anibal Ferreira
+
+% AUDIO PART
+
+[x,FS]=audioread('sting22.wav');
+% [x,FS,NBITS]=wavread('sting22.wav'); % old Matlab versions
+NBITS=16;
+sound(x,FS,NBITS); % NOTE: x values are already in the range [-1, 1]
+samples=[0:length(x)-1];
+figure
+plot(samples/FS, x);
+xlabel('Time (s)');
+ylabel('Amplitude');
+title('sting22.wav');
+
+% insert code here
+
+
+%% Re-quantization - AUDIO
+
+bits_audio = [2,4,6,8,10,14,16]; % Number of bits.
+snr_audio = zeros(size(bits_audio)); % List to store the SNR values 
+
+Px_audio = mean(x.^2); % Picking the Energy of the sampled data and turning it to Power 
+
+for i = 1 : length(bits_audio)
+
+    N = bits_audio(i);
+    levels = 2^(N-1); % The number of levels.
+
+    x_quant = round(x * (levels - 1)) / (levels - 1); % x corresponds to the sampled data
+
+    error_audio = x_quant - x; 
+
+    % Visualization
+
+    if ismember(N, [2, 8, 16]) % To avoid open so many windows
+        figure('Name', ['N = ', num2str(N)]);
+        subplot(2,1,1); plot(samples/FS, x_quant); title(['Quantized ', num2str(N), ' bits']);
+        subplot(2,1,2); plot(samples/FS, error_audio, 'r'); title('Error');
+    end
+
+    % fprintf('Playing N=%d bits... \n', N);
+    % sound(x_quant, FS); 
+    % pause(length(x)/FS + 1); % Wait for audio to finish
+
+    %% Task 1
+    Pnoise_audio = mean(error_audio.^2); % Power Noise
+
+    snr_audio(i) = 10 * log10(Px_audio / Pnoise_audio);
+end
+
+%% Task 1 
+
+p = polyfit(bits_audio, snr_audio, 1); % First order fit
+snr_audio_aprox = polyval(p, bits_audio);
+
+% Plot
+figure
+plot(bits_audio, snr_audio, 'bo-', 'LineWidth', 1.5, 'MarkerSize', 8); hold on;
+plot(bits_audio, snr_audio_aprox, 'r--', 'LineWidth', 1.2);
+grid on;
+xlabel('Número de bits (N)');
+ylabel('SNR (dB)');
+title('Evolução da SNR com o Número de Bits');
+legend('SNR Medida', sprintf('Modelo: SNR = %.2f*N + (%.2f)', p(1), p(2)));
+
+%% Task 2 
+% I need to listen to the different files
+
+% ################# IMAGE PART ############################
+
+%reads and displays image
+A=imread('lena512.bmp');
+figure
+imshow(A,[0 255]); % displays original image
+A=single(A)/255.0; % converts to float and normalizes [0, 1.0]
+title('lena512.bmp');
+
+
+%% Re-quantization - VIDEO
+
+bits_img = 2:8; % Number of bits.
+snr_img = zeros(size(bits_img)); % List to store the SNR values 
+
+Px_img = mean(A(:).^2); % Picking the Energy of the sampled data and turning it to its average Power 
+
+for i = 1 : length(bits_img)
+
+    N = bits_img(i);
+    levels = 2^(N-1); % The number of levels.
+
+    Ar_quant = round(A * (levels - 1)) / (levels - 1); % x corresponds to the sampled data
+
+    error_img = Ar_quant - A; 
+
+    % Visualization
+
+    if ismember(N, [2, 4, 8]) % To avoid open so many windows
+        figure('Name', ['N = ', num2str(N)]);
+        subplot(2,1,1); imshow(Ar_quant); title(['Quantized ', num2str(N), ' bits']);
+        subplot(2,1,2); imshow(error_img + 0.5); title('Error (offset 0.5)');
+    end
+
+    %% Task 3
+    Pnoise_img = mean(error_img(:).^2); % Power Noise to scale
+
+    snr_img(i) = 10 * log10(Px_img/Pnoise_img);
+end
+
+%% Task 3
+
+p_img = polyfit(bits_img, snr_img, 1); % First order fit
+snr_img_aprox = polyval(p_img, bits_img);
+
+% Plot
+figure;
+plot(bits_img, snr_img, 'rs-', 'LineWidth', 1.5); hold on;
+plot(bits_img, snr_img_aprox, 'k--');
+grid on;
+xlabel('N (bits)'); ylabel('SNR (dB)');
+title('Evolução da SNR - Imagem Lena');
+legend('SNR Medida', sprintf('Modelo: %.2f*N + %.2f', p_img(1), p_img(2)));
+
+
+
+%% Task 4 
+% I need to see the different files
+
+
+% insert code here
+% Ar=A; % this is temporary, to be replaced by the new code
+% 
+% Ar=uint8(Ar*255.0); % converts to "uint" format
+% figure(3)
+% imshow(Ar,[0 255]); % displays modified image
+% title('modified Lena');
+
+clear sound;
+clear image;
+
+
