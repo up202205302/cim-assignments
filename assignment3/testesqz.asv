@@ -7,7 +7,8 @@
 %
 % Anibal Ferreira
 
-% AUDIO PART
+% ################# AUDIO PART ############################
+
 
 [x,FS]=audioread('sting22.wav');
 % [x,FS,NBITS]=wavread('sting22.wav'); % old Matlab versions
@@ -51,13 +52,13 @@ for i = 1 : length(bits_audio)
     % sound(x_quant, FS); 
     % pause(length(x)/FS + 1); % Wait for audio to finish
 
-    %% Task 1
-    Pnoise = mean(error_audio.^2); % Power Noise
+    %% Task 1 - Obtaining SNR
+    Pnoise_audio = mean(error_audio.^2); % Power Noise
 
-    snr_audio(i) = 10 * log10(Px_audio / Pnoise);
+    snr_audio(i) = 10 * log10(Px_audio / Pnoise_audio);
 end
 
-%% Task 1 
+%% Task 1 - Obtaining SNR
 
 p = polyfit(bits_audio, snr_audio, 1); % First order fit
 snr_audio_aprox = polyval(p, bits_audio);
@@ -72,7 +73,7 @@ ylabel('SNR (dB)');
 title('Evolução da SNR com o Número de Bits');
 legend('SNR Medida', sprintf('Modelo: SNR = %.2f*N + (%.2f)', p(1), p(2)));
 
-%% Task 2 
+%% Task 2 - Minimum bits needed to not have artifacts
 % I need to listen to the different files
 
 % ################# IMAGE PART ############################
@@ -85,21 +86,25 @@ A=single(A)/255.0; % converts to float and normalizes [0, 1.0]
 title('lena512.bmp');
 
 
+
+
+
+
 %% Re-quantization - VIDEO
 
 bits_img = 2:8; % Number of bits.
 snr_img = zeros(size(bits_img)); % List to store the SNR values 
 
-Px_img = mean(x.^2); % Picking the Energy of the sampled data and turning it to Power 
+Px_img = mean(A(:).^2); % Picking the Energy of the sampled data and turning it to its average Power 
 
 for i = 1 : length(bits_img)
 
     N = bits_img(i);
     levels = 2^(N-1); % The number of levels.
 
-    Ar_quant = round(x * (levels - 1)) / (levels - 1); % x corresponds to the sampled data
+    Ar_quant = round(A * (levels - 1)) / (levels - 1); % x corresponds to the sampled data
 
-    error_img = x_quant - x; 
+    error_img = Ar_quant - A; 
 
     % Visualization
 
@@ -109,45 +114,113 @@ for i = 1 : length(bits_img)
         subplot(2,1,2); imshow(error_img + 0.5); title('Error (offset 0.5)');
     end
 
-    % fprintf('Playing N=%d bits... \n', N);
-    % sound(x_quant, FS); 
-    % pause(length(x)/FS + 1); % Wait for audio to finish
+    %% Task 3 - Obtaining SNR
+    Pnoise_img = mean(error_img(:).^2); % Power Noise to scale
 
-    %% Task 1
-    Pnoise = mean(error_img.^2); % Power Noise
-
-    snr_audio(i) = 10 * log10(Px_img / Pnoise);
+    snr_img(i) = 10 * log10(Px_img/Pnoise_img);
 end
 
-%% Task 1 
-
-p = polyfit(bits_audio, snr_audio, 1); % First order fit
-snr_audio_aprox = polyval(p, bits_audio);
+%% Task 3 - Obtaining SNR
+p_img = polyfit(bits_img, snr_img, 1); % First order fit
+snr_img_aprox = polyval(p_img, bits_img);
 
 % Plot
-figure
-plot(bits_audio, snr_audio, 'bo-', 'LineWidth', 1.5, 'MarkerSize', 8); hold on;
-plot(bits_audio, snr_audio_aprox, 'r--', 'LineWidth', 1.2);
+figure;
+plot(bits_img, snr_img, 'rs-', 'LineWidth', 1.5); hold on;
+plot(bits_img, snr_img_aprox, 'k--');
 grid on;
-xlabel('Número de bits (N)');
-ylabel('SNR (dB)');
-title('Evolução da SNR com o Número de Bits');
-legend('SNR Medida', sprintf('Modelo: SNR = %.2f*N + (%.2f)', p(1), p(2)));
+xlabel('N (bits)'); ylabel('SNR (dB)');
+title('Evolução da SNR - Imagem Lena');
+legend('SNR Medida', sprintf('Modelo: %.2f*N + %.2f', p_img(1), p_img(2)));
+
+%% Task 4 - Minimum bits needed to not have artifacts
+% I need to see the different files
 
 
 
-%% Task 3 
 
 
 
-% insert code here
-% Ar=A; % this is temporary, to be replaced by the new code
-% 
-% Ar=uint8(Ar*255.0); % converts to "uint" format
-% figure(3)
-% imshow(Ar,[0 255]); % displays modified image
-% title('modified Lena');
 
-clear sound;
+
+
+
+
+
+%% Task 5 - Sinusoidal waveform 
+
+% Sinusoidal creation givn by the guide
+samples=[0: 1E5-1];
+x_sine=sin(0.22*samples);
+
+bits_sine = 2:14;         
+snr_sine = zeros(size(bits_sine));
+
+corr_sine = zeros(size(bits_sine)); % ii)
+
+Px_sine = mean(x_sine.^2);
+
+for i = 1:length(bits_sine)
+
+    N = bits_sine(i);
+    levels = 2^N; 
+
+    xq = round((x_sine + 1) * (levels - 1) / 2); % Normalize from [-1, 1] to [0, L-1] and then round
+    x_quant = (xq / (levels - 1)) * 2 - 1;       % Rescale back to [-1, 1]
+    
+    err_sine = x_quant - x_sine;
+
+    % i)
+    Pn_sine = mean(err_sine.^2);
+    snr_sine(i) = 10 * log10(Px_sine / Pn_sine);
+
+    % ii)
+    res_corr = corrcoef(x_sine,err_sine); % Crossed Correlation 
+    corr_sine(i) = abs(res_corr(1,2));
+    % corr_sine(i) = abs(res_corr(2,1));
+
+    %   Selecting the X value, res_corr(2,1) would also work
+    %
+    %   1 2       
+    % [ 1 X ] 1
+    % [ X 1 ] 2
+
+end
+
+p_sine = polyfit(bits_sine, snr_sine, 1); % First order fit
+snr_sine_aprox = polyval(p_sine, bits_sine); 
+
+fprintf('\nModelo SNR Sinusoide: SNR = %.2f * N + (%.2f)\n', p_sine(1), p_sine(2));
+
+% ii) Correlation Graphic
+figure('Name', 'Task 5.ii - Correlation');
+stem(bits_sine, corr_sine, 'filled', 'LineWidth', 1.5);
+grid on;
+xlabel('Number of bits (N)');
+ylabel('|Correlation Coefficients|');
+title('Correlation between Sinusoidal and Quantization Error');
+
+% iii) PDF evolution
+
+figure('Name', 'Task 5.iii - PDF evolution');
+
+% PDF's Original Sinusoidal
+subplot(2,1,1);
+x_pdf = x_sine; 
+[H, X] = hist(x_pdf, 50); equalize = 50/(max(x_pdf)-min(x_pdf));
+bar(X, H/sum(H)*equalize, 0.5, 'FaceColor', [0.2 0.6 0.8]);
+ylabel('PDF'); xlabel('x[n] amplitude');
+title('PDFs Original Sinusoidal (U shaped distribution)');
+
+% PDF's Quantization error (N=14 bits - último do loop)
+subplot(2,1,2);
+x_pdf = err_sine; 
+[H, X] = hist(x_pdf, 50); equalize = 50/(max(x_pdf)-min(x_pdf));
+bar(X, H/sum(H)*equalize, 0.5, 'FaceColor', [0.8 0.2 0.2]);
+ylabel('PDF'); xlabel('Erro amplitude');
+title('PDFs Quantization Error (N=14 bits - Uniform)');
+
+clear; % Just to avoid spamming
+
 
 
