@@ -6,7 +6,8 @@
 % due date: March 29, 2026
 %
 % Anibal Ferreira
-
+%
+% Made by: G
 % ################# AUDIO PART ############################
 
 
@@ -219,6 +220,58 @@ x_pdf = err_sine;
 bar(X, H/sum(H)*equalize, 0.5, 'FaceColor', [0.8 0.2 0.2]);
 ylabel('PDF'); xlabel('Erro amplitude');
 title('PDFs Quantization Error (N=14 bits - Uniform)');
+
+
+% We need to explain 5.iii)
+
+
+%% Task 6 -
+
+factors = [2, 4];
+
+% Audio implementation
+for F = factors
+    % A. Decimation: Keep every F-th sample
+    x_decimated = downsample(x, F);
+    
+    % B. Upsampling: Insert F-1 zeros between samples
+    x_zeros = upsample(x_decimated, F);
+    
+    % C. Repetition: Use filter to replace zeros with previous sample
+    % The filter 'ones(1, F)' sums the current and F-1 previous samples.
+    % Since only one sample in every F is non-zero, this effectively repeats it.
+    b = ones(1, F);
+    a = 1;
+    x_reconstructed = filter(b, a, x_zeros);
+    
+    % Visualization
+    figure('Name', ['Audio Decimation F=' num2str(F)]);
+    subplot(2,1,1); plot(x(1:1000)); title('Original');
+    subplot(2,1,2); plot(x_reconstructed(1:1000)); title(['Reconstructed (F=' num2str(F) ')']);
+    
+    % Play result
+    % sound(x_reconstructed, FS); pause(length(x_reconstructed)/FS + 1);
+end
+
+for F = factors
+    % A. Decimation: Downsample both rows and columns
+    A_decimated = A(1:F:end, 1:F:end);
+    
+    % B. Upsampling: Create a grid of zeros and place decimated pixels
+    [orig_h, orig_w] = size(A);
+    A_zeros = zeros(orig_h, orig_w);
+    A_zeros(1:F:end, 1:F:end) = A_decimated;
+    
+    % C. Repetition: Use filter2 with an FxF mask of ones
+    % This replicates each pixel into an FxF block
+    h = ones(F, F);
+    A_reconstructed = filter2(h, A_zeros);
+    
+    % Visualization
+    figure('Name', ['Image Decimation F=' num2str(F)]);
+    imshow(A_reconstructed);
+    title(['Decimated/Repeated Lena (F=' num2str(F) ')']);
+end
 
 clear; % Just to avoid spamming
 

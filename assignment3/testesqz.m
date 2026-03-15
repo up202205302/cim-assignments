@@ -6,7 +6,8 @@
 % due date: March 29, 2026
 %
 % Anibal Ferreira
-
+%
+% Made by: Guilherme Rodrigues up202208878 & Joao Oliveira up202205302
 % ################# AUDIO PART ############################
 
 
