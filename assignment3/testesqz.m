@@ -69,10 +69,10 @@ figure
 plot(bits_audio, snr_audio, 'bo-', 'LineWidth', 1.5, 'MarkerSize', 8); hold on;
 plot(bits_audio, snr_audio_aprox, 'r--', 'LineWidth', 1.2);
 grid on;
-xlabel('Número de bits (N)');
+xlabel('Number of bits (N)');
 ylabel('SNR (dB)');
-title('Evolução da SNR com o Número de Bits');
-legend('SNR Medida', sprintf('Modelo: SNR = %.2f*N + (%.2f)', p(1), p(2)));
+title('SNR''s evolution along the number of bits ');
+legend('Measured SNR', sprintf('Model: SNR = %.2f*N + (%.2f)', p(1), p(2)));
 
 %% Task 2 - Minimum bits needed to not have artifacts
 % I need to listen to the different files
@@ -131,8 +131,8 @@ plot(bits_img, snr_img, 'rs-', 'LineWidth', 1.5); hold on;
 plot(bits_img, snr_img_aprox, 'k--');
 grid on;
 xlabel('N (bits)'); ylabel('SNR (dB)');
-title('Evolução da SNR - Imagem Lena');
-legend('SNR Medida', sprintf('Modelo: %.2f*N + %.2f', p_img(1), p_img(2)));
+title('SNR''s evolution - Lena');
+legend('SNR Medida', sprintf('Model: %.2f*N + %.2f', p_img(1), p_img(2)));
 
 %% Task 4 - Minimum bits needed to not have artifacts
 % I need to see the different files
@@ -193,13 +193,22 @@ snr_sine_aprox = polyval(p_sine, bits_sine);
 
 fprintf('\nModelo SNR Sinusoide: SNR = %.2f * N + (%.2f)\n', p_sine(1), p_sine(2));
 
+% i) SNR sinusoidal Graphic
+subplot(2,1,1);
+plot(bits_sine, snr_sine_aprox, 'rs-', 'LineWidth', 1.5); hold on;
+plot(bits_sine, snr_sine_aprox, 'k--');
+grid on;
+xlabel('N (bits)'); ylabel('SNR (dB)');
+title('Task 5.i - SNR''s evolution - Sinusoidal');
+legend('Measured SNR', sprintf('Model: %.2f*N + %.2f', p_img(1), p_img(2)));
+
 % ii) Correlation Graphic
-figure('Name', 'Task 5.ii - Correlation');
+subplot(2,1,2);
 stem(bits_sine, corr_sine, 'filled', 'LineWidth', 1.5);
 grid on;
 xlabel('Number of bits (N)');
 ylabel('|Correlation Coefficients|');
-title('Correlation between Sinusoidal and Quantization Error');
+title('Task 5.ii - Correlation between Sinusoidal and Quantization Error');
 
 % iii) PDF evolution
 
@@ -273,7 +282,7 @@ for F = factors
     title(['Decimated/Repeated Lena (F=' num2str(F) ')']);
 end
 
-clear; % Just to avoid spamming
+clear % Just to avoid spamming
 
 
 
