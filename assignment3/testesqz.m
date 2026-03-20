@@ -14,7 +14,10 @@
 [x,FS]=audioread('sting22.wav');
 % [x,FS,NBITS]=wavread('sting22.wav'); % old Matlab versions
 NBITS=16;
-sound(x,FS,NBITS); % NOTE: x values are already in the range [-1, 1]
+
+sound(x*0.1,FS,NBITS); % NOTE: x values are already in the range [-1, 1]
+pause(length(x)/FS + 1); % Wait for audio to finish
+
 samples=[0:length(x)-1];
 figure
 plot(samples/FS, x);
@@ -25,7 +28,7 @@ title('sting22.wav');
 % insert code here
 
 
-%% Re-quantization - AUDIO
+% Re-quantization - AUDIO
 
 bits_audio = [2,4,6,8,10,14,16]; % Number of bits.
 snr_audio = zeros(size(bits_audio)); % List to store the SNR values 
@@ -35,9 +38,10 @@ Px_audio = mean(x.^2); % Picking the Energy of the sampled data and turning it t
 for i = 1 : length(bits_audio)
 
     N = bits_audio(i);
-    levels = 2^(N-1); % The number of levels.
+    levels = 2^(N); % The number of levels.
 
-    x_quant = round(x * (levels - 1)) / (levels - 1); % x corresponds to the sampled data
+    xq = round((x + 1) * (levels - 1) / 2); % x corresponds to the sampled data
+    x_quant = (xq / (levels - 1)) * 2 - 1; 
 
     error_audio = x_quant - x; 
 
@@ -49,9 +53,23 @@ for i = 1 : length(bits_audio)
         subplot(2,1,2); plot(samples/FS, error_audio, 'r'); title('Error');
     end
 
+    %% Task 2 - Listening to the audios
+    
+
     % fprintf('Playing N=%d bits... \n', N);
-    % sound(x_quant, FS); 
-    % pause(length(x)/FS + 1); % Wait for audio to finish
+    % 
+    % sound(0.1*x_quant, FS); 
+    % pause(length(x_quant)/FS + 1); % Wait for audio to finish
+    % 
+    % input(sprintf('  --> Listened to N=%d bits. Press Enter to continue to next N...', N));
+    % 
+    % fprintf('Playing ERROR signal for N=%d bits...\n', N);
+
+    % sound(0.1*error_audio / max(abs(error_audio) + 1e-10), FS); % Normalize error for audibility
+    % pause(length(error_audio)/FS + 1);
+    % 
+    % input(sprintf('  --> Listened to N=%d bits. Press Enter to continue to next N...', N));
+
 
     %% Task 1 - Obtaining SNR
     Pnoise_audio = mean(error_audio.^2); % Power Noise
@@ -71,29 +89,21 @@ plot(bits_audio, snr_audio_aprox, 'r--', 'LineWidth', 1.2);
 grid on;
 xlabel('Number of bits (N)');
 ylabel('SNR (dB)');
-title('SNR''s evolution along the number of bits ');
+title('SNR''s evolution - Sting');
 legend('Measured SNR', sprintf('Model: SNR = %.2f*N + (%.2f)', p(1), p(2)));
-
-%% Task 2 - Minimum bits needed to not have artifacts
-% I need to listen to the different files
 
 % ################# IMAGE PART ############################
 
 %reads and displays image
 A=imread('lena512.bmp');
-figure
+figure;
 imshow(A,[0 255]); % displays original image
 A=single(A)/255.0; % converts to float and normalizes [0, 1.0]
 title('lena512.bmp');
 
+% Re-quantization - VIDEO
 
-
-
-
-
-%% Re-quantization - VIDEO
-
-bits_img = 2:8; % Number of bits.
+bits_img = 2:7; % Number of bits.
 snr_img = zeros(size(bits_img)); % List to store the SNR values 
 
 Px_img = mean(A(:).^2); % Picking the Energy of the sampled data and turning it to its average Power 
@@ -101,15 +111,18 @@ Px_img = mean(A(:).^2); % Picking the Energy of the sampled data and turning it 
 for i = 1 : length(bits_img)
 
     N = bits_img(i);
-    levels = 2^(N-1); % The number of levels.
+    levels = 2^(N); % The number of levels.
+
+    % The method done in audio, isn't done in the images, because they are
+    % normalized with [0,1]
 
     Ar_quant = round(A * (levels - 1)) / (levels - 1); % x corresponds to the sampled data
 
     error_img = Ar_quant - A; 
 
-    % Visualization
+    %% Task 4 - Minimum bits needed to not have artifacts
 
-    if ismember(N, [2, 4, 8]) % To avoid open so many windows
+    if ismember(N, [2, 4, 5, 6, 7]) % To avoid open so many windows
         figure('Name', ['N = ', num2str(N)]);
         subplot(2,1,1); imshow(Ar_quant); title(['Quantized ', num2str(N), ' bits']);
         subplot(2,1,2); imshow(error_img + 0.5); title('Error (offset 0.5)');
@@ -125,27 +138,16 @@ end
 p_img = polyfit(bits_img, snr_img, 1); % First order fit
 snr_img_aprox = polyval(p_img, bits_img);
 
+valid = isfinite(snr_img); %  Using 8 bits for the model leads to an error while plotting, because since it's discrete values, the reconstruction is perfect. Leading to an infinite SNR.
+
 % Plot
 figure;
-plot(bits_img, snr_img, 'rs-', 'LineWidth', 1.5); hold on;
-plot(bits_img, snr_img_aprox, 'k--');
+plot(bits_img(valid), snr_img(valid), 'rs-', 'LineWidth', 1.5, 'MarkerSize', 8); hold on;
+plot(bits_img(valid), snr_img_aprox, 'k--', 'LineWidth', 1.2);
 grid on;
 xlabel('N (bits)'); ylabel('SNR (dB)');
 title('SNR''s evolution - Lena');
-legend('SNR Medida', sprintf('Model: %.2f*N + %.2f', p_img(1), p_img(2)));
-
-%% Task 4 - Minimum bits needed to not have artifacts
-% I need to see the different files
-
-
-
-
-
-
-
-
-
-
+legend('Measured SNR', sprintf('Model: %.2f*N + %.2f', p_img(1), p_img(2)));
 
 
 %% Task 5 - Sinusoidal waveform 
@@ -164,7 +166,7 @@ Px_sine = mean(x_sine.^2);
 for i = 1:length(bits_sine)
 
     N = bits_sine(i);
-    levels = 2^N; 
+    levels = 2^(N); 
 
     xq = round((x_sine + 1) * (levels - 1) / 2); % Normalize from [-1, 1] to [0, L-1] and then round
     x_quant = (xq / (levels - 1)) * 2 - 1;       % Rescale back to [-1, 1]
@@ -191,16 +193,15 @@ end
 p_sine = polyfit(bits_sine, snr_sine, 1); % First order fit
 snr_sine_aprox = polyval(p_sine, bits_sine); 
 
-fprintf('\nModelo SNR Sinusoide: SNR = %.2f * N + (%.2f)\n', p_sine(1), p_sine(2));
-
 % i) SNR sinusoidal Graphic
+figure;
 subplot(2,1,1);
 plot(bits_sine, snr_sine_aprox, 'rs-', 'LineWidth', 1.5); hold on;
 plot(bits_sine, snr_sine_aprox, 'k--');
 grid on;
 xlabel('N (bits)'); ylabel('SNR (dB)');
 title('Task 5.i - SNR''s evolution - Sinusoidal');
-legend('Measured SNR', sprintf('Model: %.2f*N + %.2f', p_img(1), p_img(2)));
+legend('Measured SNR', sprintf('Model: %.2f*N + %.2f', p_sine(1), p_sine(2)));
 
 % ii) Correlation Graphic
 subplot(2,1,2);
