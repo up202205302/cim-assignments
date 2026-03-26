@@ -256,8 +256,8 @@ for F = factors
     
     % Visualization
     figure('Name', ['Audio Decimation F=' num2str(F)]);
-    subplot(2,1,1); plot(x(1:1000)); title('Original');
-    subplot(2,1,2); plot(x_reconstructed(1:1000)); title(['Reconstructed (F=' num2str(F) ')']);
+    subplot(2,1,1); plot(x(5000:6000)); title('Original'); % because the first 1000 samples are silence in the audio 
+    subplot(2,1,2); plot(x_reconstructed(5000:6000)); title(['Reconstructed (F=' num2str(F) ')']);
     
     % Play result
     % sound(x_reconstructed, FS); pause(length(x_reconstructed)/FS + 1);
