@@ -30,7 +30,7 @@ title('sting22.wav');
 
 % Re-quantization - AUDIO
 
-bits_audio = [2,4,6,8,10,14,16]; % Number of bits.
+bits_audio = [2,4,6,8,10,12,14,16]; % Number of bits.
 snr_audio = zeros(size(bits_audio)); % List to store the SNR values 
 
 Px_audio = mean(x.^2); % Picking the Energy of the sampled data and turning it to Power 
@@ -56,19 +56,19 @@ for i = 1 : length(bits_audio)
     %% Task 2 - Listening to the audios
     
 
-    % fprintf('Playing N=%d bits... \n', N);
+     %fprintf('Playing N=%d bits... \n', N);
+     
+     %sound(0.1*x_quant, FS); 
+     %pause(length(x_quant)/FS + 1); % Wait for audio to finish
     % 
-    % sound(0.1*x_quant, FS); 
-    % pause(length(x_quant)/FS + 1); % Wait for audio to finish
+     %input(sprintf('  --> Listened to N=%d bits. Press Enter to continue to next N...', N));
     % 
-    % input(sprintf('  --> Listened to N=%d bits. Press Enter to continue to next N...', N));
-    % 
-    % fprintf('Playing ERROR signal for N=%d bits...\n', N);
+     %fprintf('Playing ERROR signal for N=%d bits...\n', N);
 
-    % sound(0.1*error_audio / max(abs(error_audio) + 1e-10), FS); % Normalize error for audibility
-    % pause(length(error_audio)/FS + 1);
+     %sound(0.1*error_audio / max(abs(error_audio) + 1e-10), FS); % Normalize error for audibility
+     %pause(length(error_audio)/FS + 1);
     % 
-    % input(sprintf('  --> Listened to N=%d bits. Press Enter to continue to next N...', N));
+     %input(sprintf('  --> Listened to N=%d bits. Press Enter to continue to next N...', N));
 
 
     %% Task 1 - Obtaining SNR
@@ -223,6 +223,8 @@ bar(X, H/sum(H)*equalize, 0.5, 'FaceColor', [0.2 0.6 0.8]);
 ylabel('PDF'); xlabel('x[n] amplitude');
 title('PDFs Original Sinusoidal (U shaped distribution)');
 
+
+
 % PDF's Quantization error (N=14 bits - último do loop)
 subplot(2,1,2);
 x_pdf = err_sine; 
@@ -231,6 +233,52 @@ bar(X, H/sum(H)*equalize, 0.5, 'FaceColor', [0.8 0.2 0.2]);
 ylabel('PDF'); xlabel('Erro amplitude');
 title('PDFs Quantization Error (N=14 bits - Uniform)');
 
+
+%% Task 5.iii - PDF evolution
+
+% Added a 'Position' tag to make the window taller so the 3 graphs fit nicely
+figure('Name', 'Task 5.iii - PDF evolution', 'Position', [100, 100, 800, 800]);
+
+% 1. PDF of the Original Sinusoidal
+subplot(3,1,1);
+x_pdf = x_sine; 
+[H, X] = hist(x_pdf, 50); equalize = 50/(max(x_pdf)-min(x_pdf));
+bar(X, H/sum(H)*equalize, 0.5, 'FaceColor', [0.2 0.6 0.8]);
+ylabel('PDF'); xlabel('Amplitude');
+title('1. PDF of Original Sinusoid (U-shaped distribution)');
+
+% 2. PDF of Quantization Error at LOW bit depth (N=3 bits)
+subplot(3,1,2);
+% Quickly recalculating the error for N=3
+N_low = 3;
+levels_low = 2^(N_low); 
+xq_low = round((x_sine + 1) * (levels_low - 1) / 2); 
+x_quant_low = (xq_low / (levels_low - 1)) * 2 - 1;       
+err_low = x_quant_low - x_sine;
+
+x_pdf = err_low; 
+[H, X] = hist(x_pdf, 50); equalize = 50/(max(x_pdf)-min(x_pdf));
+bar(X, H/sum(H)*equalize, 0.5, 'FaceColor', [0.9 0.6 0.2]); % Orange color for contrast
+ylabel('PDF'); xlabel('Error Amplitude');
+title('2. PDF of Quantization Error (N=3 bits');
+
+% 3. PDF of Quantization Error at HIGH bit depth (N=14 bits)
+subplot(3,1,3);
+% Quickly recalculating the error for N=14 
+N_high = 14;
+levels_high = 2^(N_high); 
+xq_high = round((x_sine + 1) * (levels_high - 1) / 2); 
+x_quant_high = (xq_high / (levels_high - 1)) * 2 - 1;       
+err_high = x_quant_high - x_sine;
+
+x_pdf = err_high; 
+[H, X] = hist(x_pdf, 50); equalize = 50/(max(x_pdf)-min(x_pdf));
+bar(X, H/sum(H)*equalize, 0.5, 'FaceColor', [0.8 0.2 0.2]);
+ylabel('PDF'); xlabel('Error Amplitude');
+title('3. PDF of Quantization Error (N=14 bits - Uniform Distribution)');
+
+% Add a master title to the whole window
+sgtitle('Evolution of the Probability Density Function (PDF)');
 
 % We need to explain 5.iii)
 
