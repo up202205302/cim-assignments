@@ -1,0 +1,42 @@
+% M . EEC045 - CODIFICACAO DE INFORMACAO MULTIMEDIA
+%
+% second audio assignment
+%
+% due date : april 12 , 2026
+%
+% Made by : Guilherme Rodrigues up202208878 & Joao Oliveira up202205302
+
+% ###################### TASK 1 ####################
+
+clear; clc;
+
+% Parameters
+Fs = 22050;          % Sampling frequency 
+f0 = 440;            % Fundamental frequency (1/T) 
+T = 1/f0;            % Period in seconds
+A = 5000;            % Amplitude value 
+num_terms = 5;       % First 5 terms of the summation
+
+% Time vector for visualizing one period
+t = 0 : 1/Fs : T;
+
+% Initialize the signal vector
+x_t = zeros(size(t));
+
+% Implementation of Equation (2.13)
+% x(t) = -sum_{k=1}^{5} ( (2*A) / (pi*k) ) * sin( (2*pi/T) * k * t )
+for k = 1:num_terms
+    harmonic_amplitude = (2 * A) / (pi * k);
+    x_t = x_t - harmonic_amplitude * sin((2 * pi / T) * k * t);
+end
+
+% Visualization
+figure;
+plot(t, x_t, 'LineWidth', 1.5);
+grid on;
+title(['Synthesis of Sawtooth Wave (First ', num2str(num_terms), ' terms)']);
+xlabel('Time (s)');
+ylabel('Amplitude');
+axis([0 T -A*1.2 A*1.2]); % Set axis to show full amplitude clearly
+
+num_terms = 100;
