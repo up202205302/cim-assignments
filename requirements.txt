@@ -2,5 +2,6 @@ numpy
 matplotlib
 ipympl
 opencv-python-headless
+opencv-python
 scikit-image
 PyWavelets
