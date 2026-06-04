@@ -1,1 +1,3 @@
 compressed_*
+venv/
+.venv/
